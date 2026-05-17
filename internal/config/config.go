@@ -19,6 +19,8 @@ type Config struct {
 	DatabaseURL string `mapstructure:"database_url"`
 	RedisAddr   string `mapstructure:"redis_addr"`
 	KafkaBrokers string `mapstructure:"kafka_brokers"`
+	GatewayJWTToken string `mapstructure:"gateway_jwt_token"`
+	GatewayTimeoutSeconds int `mapstructure:"gateway_timeout_seconds"`
 }
 
 // Load reads configuration from .env, environment variables, and optional config file.
@@ -35,6 +37,8 @@ func Load() (Config, error) {
 	v.SetDefault("database_url", "postgres://postgres:postgres@localhost:5432/golang_microservices?sslmode=disable")
 	v.SetDefault("redis_addr", "localhost:6379")
 	v.SetDefault("kafka_brokers", "localhost:9092")
+	v.SetDefault("gateway_jwt_token", "dev-gateway-token")
+	v.SetDefault("gateway_timeout_seconds", 8)
 
 	v.SetEnvPrefix("APP")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
