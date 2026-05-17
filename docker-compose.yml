@@ -98,5 +98,21 @@ services:
       postgres:
         condition: service_healthy
 
+  market-data-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: market-data-service
+    environment:
+      APP_HTTP_ADDR: ":8083"
+      APP_LOG_LEVEL: "info"
+      APP_KAFKA_BROKERS: "kafka:9092"
+    ports:
+      - "8083:8083"
+    depends_on:
+      kafka:
+        condition: service_started
+
 volumes:
   postgres_data:
