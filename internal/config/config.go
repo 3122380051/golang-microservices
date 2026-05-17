@@ -24,6 +24,7 @@ type Config struct {
 	AuthJWTSecret             string `mapstructure:"auth_jwt_secret"`
 	AuthAccessTokenTTLMinutes int    `mapstructure:"auth_access_token_ttl_minutes"`
 	AuthRefreshTokenTTLHours  int    `mapstructure:"auth_refresh_token_ttl_hours"`
+	UserAPIKeyEncryptionKey   string `mapstructure:"user_api_key_encryption_key"`
 }
 
 // Load reads configuration from .env, environment variables, and optional config file.
@@ -45,6 +46,7 @@ func Load() (Config, error) {
 	v.SetDefault("auth_jwt_secret", "dev-auth-secret")
 	v.SetDefault("auth_access_token_ttl_minutes", 60)
 	v.SetDefault("auth_refresh_token_ttl_hours", 168)
+	v.SetDefault("user_api_key_encryption_key", "")
 
 	v.SetEnvPrefix("APP")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
