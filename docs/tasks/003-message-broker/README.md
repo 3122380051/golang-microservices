@@ -20,15 +20,24 @@ Setup Kafka hoặc NATS trong Docker Compose, define topic/subject names, create
 - [ ] Multi-partition topic: producer distribute balanced.
 
 ## Deliverables
-- [ ] ✅ Docker Compose config cho Kafka/NATS.
-- [ ] ✅ internal/infrastructure/broker/producer.go
-- [ ] ✅ internal/infrastructure/broker/consumer.go
-- [ ] ✅ internal/domain/event/market_event.go (event types)
-- [ ] ✅ scripts/kafka-topics.sh hoặc NATS config
-- [ ] ✅ tests/broker_test.go (integration test)
+- [x] ✅ Docker Compose config cho Kafka/NATS.
+- [x] ✅ internal/infrastructure/broker/producer.go
+- [x] ✅ internal/infrastructure/broker/consumer.go
+- [x] ✅ internal/domain/event/market_event.go (event types)
+- [x] ✅ scripts/kafka-topics.sh hoặc NATS config
+- [x] ✅ tests/broker_test.go (integration test)
+
+## Implementation Notes
+- Dùng Kafka để thống nhất với compose hiện tại.
+- Producer/consumer dùng `segmentio/kafka-go`.
+- Consumer có DLQ publish khi handler trả lỗi và vẫn commit offset để tránh loop message xấu.
+- Event schema được bọc trong envelope version hóa.
 
 ## Effort
 3h (DevOps/Backend Lead)
 
 ## Timeline
 Ngày 2 sáng
+
+## Status
+done
