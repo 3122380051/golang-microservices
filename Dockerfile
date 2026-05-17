@@ -4,11 +4,12 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/api-gateway ./cmd/api-gateway
+ARG SERVICE=api-gateway
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/app ./cmd/${SERVICE}
 
 FROM alpine:3.20
 RUN apk --no-cache add ca-certificates
 WORKDIR /app
-COPY --from=builder /bin/api-gateway /usr/local/bin/api-gateway
+COPY --from=builder /bin/app /usr/local/bin/app
 EXPOSE 8080
-CMD ["api-gateway"]
+CMD ["app"]

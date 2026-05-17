@@ -11,16 +11,19 @@ import (
 
 // Config holds application settings loaded from env or config file.
 type Config struct {
-	AppName     string `mapstructure:"app_name"`
-	AppEnv      string `mapstructure:"app_env"`
-	HTTPAddr    string `mapstructure:"http_addr"`
-	LogLevel    string `mapstructure:"log_level"`
-	ConfigFile  string `mapstructure:"config_file"`
-	DatabaseURL string `mapstructure:"database_url"`
-	RedisAddr   string `mapstructure:"redis_addr"`
-	KafkaBrokers string `mapstructure:"kafka_brokers"`
-	GatewayJWTToken string `mapstructure:"gateway_jwt_token"`
-	GatewayTimeoutSeconds int `mapstructure:"gateway_timeout_seconds"`
+	AppName                   string `mapstructure:"app_name"`
+	AppEnv                    string `mapstructure:"app_env"`
+	HTTPAddr                  string `mapstructure:"http_addr"`
+	LogLevel                  string `mapstructure:"log_level"`
+	ConfigFile                string `mapstructure:"config_file"`
+	DatabaseURL               string `mapstructure:"database_url"`
+	RedisAddr                 string `mapstructure:"redis_addr"`
+	KafkaBrokers              string `mapstructure:"kafka_brokers"`
+	GatewayJWTToken           string `mapstructure:"gateway_jwt_token"`
+	GatewayTimeoutSeconds     int    `mapstructure:"gateway_timeout_seconds"`
+	AuthJWTSecret             string `mapstructure:"auth_jwt_secret"`
+	AuthAccessTokenTTLMinutes int    `mapstructure:"auth_access_token_ttl_minutes"`
+	AuthRefreshTokenTTLHours  int    `mapstructure:"auth_refresh_token_ttl_hours"`
 }
 
 // Load reads configuration from .env, environment variables, and optional config file.
@@ -39,6 +42,9 @@ func Load() (Config, error) {
 	v.SetDefault("kafka_brokers", "localhost:9092")
 	v.SetDefault("gateway_jwt_token", "dev-gateway-token")
 	v.SetDefault("gateway_timeout_seconds", 8)
+	v.SetDefault("auth_jwt_secret", "dev-auth-secret")
+	v.SetDefault("auth_access_token_ttl_minutes", 60)
+	v.SetDefault("auth_refresh_token_ttl_hours", 168)
 
 	v.SetEnvPrefix("APP")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
