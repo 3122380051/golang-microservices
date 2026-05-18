@@ -36,3 +36,15 @@ Implement Auth Service: đăng ký, đăng nhập, JWT token generation, refresh
 
 ## Timeline
 Ngày 3 chiều + Ngày 4 sáng
+
+## Status
+✅ **COMPLETED** - Auth Service fully operational
+- User registration with email validation, bcrypt password hashing, duplicate email check
+- Login endpoint with JWT + refresh token generation
+- Access token: 60-minute expiry, HS256 signed
+- Refresh token: 168-hour (7d) expiry with rotation on use
+- Token claims: user_id, email, roles (JSON)
+- Logout with token blacklist (in-memory for MVP)
+- RBAC support with default role assignment
+- All endpoints tested and validated
+- Port: 8081

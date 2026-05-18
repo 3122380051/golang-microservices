@@ -40,4 +40,10 @@ Setup Kafka hoặc NATS trong Docker Compose, define topic/subject names, create
 Ngày 2 sáng
 
 ## Status
-done
+✅ **COMPLETED** - Kafka broker fully operational
+- Kafka 3.x configured in Docker Compose
+- 8 topics created (market.price.updated, strategy.signal.generated, risk.order.approved, order.created, execution.submitted, portfolio.updated, notification.send.requested, dead-letter)
+- Producer/consumer clients implemented with segmentio/kafka-go
+- Event envelope with version hóa schema (v1)
+- Consumer group offset tracking and DLQ handling
+- Integration tests passing

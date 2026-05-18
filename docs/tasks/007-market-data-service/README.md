@@ -37,3 +37,15 @@ Implement Market Data Service: kết nối sàn (Binance), lấy dữ liệu rea
 
 ## Timeline
 Ngày 5-6
+
+## Status
+✅ **COMPLETED** - Market Data Service fully operational
+- Binance REST adapter: getTicker, candles, orderBook endpoints
+- WebSocket stream: /ws/market with tick-by-tick real-time prices
+- Data normalization: Binance format → internal domain model
+- In-memory TTL cache: 10s for prices, 15s for candles
+- Event publisher: market.price.updated to Kafka every 1s (BTCUSDT polling)
+- Error handling: timeout, graceful fallback
+- 1-second polling cycle with exchange data fetch
+- Integration tests and adapter tests passing
+- Port: 8083

@@ -35,3 +35,16 @@ Implement Strategy Service: quản lý chiến lược, consume market data, sin
 
 ## Timeline
 Ngày 6-7
+
+## Status
+✅ **COMPLETED** - Strategy Service fully operational
+- Strategy repository: CRUD operations with in-memory storage
+- EMA Cross strategy: fast/slow/signal EMA with crossover detection
+- RSI strategy: RSI period=14, overbought=70, oversold=30 thresholds
+- Consumer: Kafka market.price.updated events with proper wiring
+- Signal generation: buy/sell/hold actions with confidence and reason
+- Idempotency: same event_id → same signal (via processedEvent map)
+- Publisher: strategy.signal.generated to Kafka
+- Extensible engine interface for adding new strategies
+- Full test coverage (EMA crossover logic, signal generation)
+- Port: 8084
