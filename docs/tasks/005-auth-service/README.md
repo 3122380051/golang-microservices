@@ -10,7 +10,7 @@ Implement Auth Service: đăng ký, đăng nhập, JWT token generation, refresh
 - [x] Refresh token: 7d expiry, rotate on use.
 - [x] Token claims: user_id, email, roles (JSON).
 - [x] Logout: token blacklist (in-memory for current phase).
-- [ ] Password reset: send email link (optional for MVP).
+- (Phase 2 - optional) Password reset: send email link (requires email service integration).
 - [x] RBAC: store user_roles (default role assignment in auth-service).
 
 ## PRD - Acceptance Criteria

@@ -18,7 +18,7 @@ Implement Strategy Service: quản lý chiến lược, consume market data, sin
 - [x] Signal generated when EMA cross detected.
 - [x] Signal include metadata: strategy_id, symbol, action, confidence, reason.
 - [x] Activate strategy -> start consuming events, inactive -> stop.
-- [ ] Backtest ready (optional): evaluate on historical data.
+- (Phase 2 - optional) Backtest ready: evaluate on historical data (requires backtesting engine).
 
 ## Deliverables
 - [x] ✅ cmd/strategy-service/main.go

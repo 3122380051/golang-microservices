@@ -8,10 +8,10 @@ Implement HTTP API Gateway dùng Echo/Gin, middleware (auth, logging, rate limit
 - [x] Middleware: request logging, trace ID injection, CORS, request timeout.
 - [x] JWT validation middleware: Bearer token -> user context (stub token cho dev).
 - [x] Rate limiter: 100 req/min per IP, 1000 req/min per user (in-memory; Redis phase sau).
-- [ ] Error handler: consistent error response format.
+- [x] Error handler: consistent JSON error response format.
 - [x] Health check endpoint: /health, /ready.
 - [x] Swagger/OpenAPI v3 documentation (stub `/openapi.json`, `/docs`).
-- [ ] Graceful shutdown (signal handling).
+- [x] Graceful shutdown (signal handling).
 
 ## PRD - Acceptance Criteria
 - [x] Gateway start up, health check return 200.
@@ -22,11 +22,11 @@ Implement HTTP API Gateway dùng Echo/Gin, middleware (auth, logging, rate limit
 - [x] Graceful shutdown < 10s.
 
 ## Deliverables
-- [ ] ✅ cmd/api-gateway/main.go
+- [x] ✅ cmd/api-gateway/main.go
 - [x] ✅ internal/transport/http.go
 - [x] ✅ internal/transport/http middleware (auth, logging, rate-limit, cors, timeout)
 - [x] ✅ internal/transport/http handlers (health, ready, ping, profile, docs)
-- [ ] ✅ Dockerfile (multi-stage build)
+- [x] ✅ Dockerfile (multi-stage build)
 - [x] ✅ tests/gateway_test.go
 
 ## Effort

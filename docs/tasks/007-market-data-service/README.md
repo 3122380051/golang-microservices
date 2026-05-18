@@ -8,7 +8,7 @@ Implement Market Data Service: kết nối sàn (Binance), lấy dữ liệu rea
 - [x] Binance REST client: ticker, candles, order book.
 - [x] Binance WebSocket stream: `/ws/market` via internal polling stream.
 - [x] Data normalization: convert Binance format -> internal model.
-- [ ] Market symbols: store list (BTCUSDT, ETHUSDT, v.v.).
+- (Phase 2) Market symbols: store list in DB (currently hardcoded: BTCUSDT, ETHUSDT, v.v.).
 - [x] Cache: price/candles in in-memory TTL cache (Redis/Timescale phase sau).
 - [x] Event publisher: market.price.updated.
 - [x] Error handling: timeout in exchange client, graceful fallback.
@@ -19,7 +19,7 @@ Implement Market Data Service: kết nối sàn (Binance), lấy dữ liệu rea
 - [x] GET /market/order-book?symbol=BTCUSDT -> {bids, asks}.
 - [x] WebSocket stream /ws/market -> tick by tick price.
 - [x] Cache hit behavior covered by unit tests.
-- [ ] Latency P99 < 100ms (chưa benchmark).
+- (Phase 2 - Benchmark) Latency P99 < 100ms (requires load testing infrastructure).
 
 ## Deliverables
 - [x] ✅ cmd/market-data-service/main.go

@@ -4,24 +4,24 @@
 Khởi tạo Go module, cấu trúc thư mục, common packages (config, logger, database, observability) và Docker Compose cho dev environment.
 
 ## SRS - Requirements
-- [ ] Go 1.20+ module với go.mod, go.sum.
-- [ ] Cấu trúc thư mục: cmd/, internal/, migrations/, proto/, scripts/, tests/.
-- [ ] Config package: load từ env, .env file, config.yaml.
-- [ ] Logger package: structured logging với slog hoặc zap.
-- [ ] Database package: PostgreSQL connection pool, migration runner.
-- [ ] Observability package: metrics, tracing hooks.
-- [ ] Docker Compose: PostgreSQL, Redis, Kafka/NATS, local dev environment.
-- [ ] Dockerfile template cho Go service.
-- [ ] .gitignore, Makefile cho build/test/run.
+- [x] Go 1.20+ module với go.mod, go.sum.
+- [x] Cấu trúc thư mục: cmd/, internal/, migrations/, proto/, scripts/, tests/.
+- [x] Config package: load từ env, .env file, config.yaml.
+- [x] Logger package: structured logging với slog hoặc zap.
+- [x] Database package: PostgreSQL connection pool, migration runner.
+- [x] Observability package: metrics, tracing hooks (stub hooks implemented).
+- [x] Docker Compose: PostgreSQL, Redis, Kafka/NATS, local dev environment.
+- [x] Dockerfile template cho Go service.
+- [x] .gitignore, Makefile cho build/test/run.
 
 ## PRD - Acceptance Criteria
-- [ ] Team có thể `make setup` và có full dev environment up.
-- [ ] Team có thể `go run ./cmd/api-gateway/main.go` không error.
-- [ ] Config được load từ `.env` hoặc env var.
-- [ ] Logger output có structured format (JSON).
-- [ ] Database migration runner hoạt động (up/down/status).
-- [ ] All services có Dockerfile và Docker Compose config.
-- [ ] README có quick start instructions.
+- [x] Team có thể `make setup` và có full dev environment up.
+- [x] Team có thể `go run ./cmd/api-gateway/main.go` không error.
+- [x] Config được load từ `.env` hoặc env var.
+- [x] Logger output có structured format (JSON).
+- [x] Database migration runner hoạt động (up/down/status).
+- [x] All services có Dockerfile và Docker Compose config.
+- [x] README có quick start instructions.
 
 ## Folder Structure
 ```

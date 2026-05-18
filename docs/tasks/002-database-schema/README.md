@@ -4,21 +4,21 @@
 Thiết kế và tạo PostgreSQL schema với các bảng: users, roles, strategies, orders, executions, portfolios, positions, audit_logs, notifications. Tạo migration files, indexes, seed data.
 
 ## SRS - Requirements
-- [ ] PostgreSQL 13+ setup trong Docker Compose.
-- [ ] Migration files (.up.sql, .down.sql) cho tất cả tables.
-- [ ] Primary keys: UUID v4 cho mọi bảng.
-- [ ] Foreign keys: enforced, cascade delete nếu cần.
-- [ ] Indexes: ON user_id, symbol_id, status, created_at.
-- [ ] Seed data: roles (admin, user, trader).
-- [ ] Connection pooling: max_open_conns=25, max_idle_conns=5.
-- [ ] Backup strategy: pg_dump script.
+- [x] PostgreSQL 13+ setup dalam Docker Compose.
+- [x] Migration files (.up.sql, .down.sql) cho tất cả tables.
+- [x] Primary keys: UUID v4 cho mọi bảng.
+- [x] Foreign keys: enforced, cascade delete nếu cần.
+- [x] Indexes: ON user_id, symbol_id, status, created_at.
+- [x] Seed data: roles (admin, user, trader).
+- [x] Connection pooling: max_open_conns=25, max_idle_conns=5.
+- [x] Backup strategy: pg_dump script.
 
 ## PRD - Acceptance Criteria
-- [ ] Chạy `make migrate up` tạo toàn bộ schema không error.
-- [ ] Chạy `make migrate down` xóa schema không error.
-- [ ] Select từ users, roles bảng seed data hiểu thấy.
-- [ ] Foreign key constraint check hoạt động (insert invalid id -> error).
-- [ ] Query với index chạy < 100ms.
+- [x] Chạy `make migrate up` tạo toàn bộ schema không error.
+- [x] Chạy `make migrate down` xóa schema không error.
+- [x] Select từ users, roles bảng seed data hiểu thấy.
+- [x] Foreign key constraint check hoạt động (insert invalid id -> error).
+- [x] Query với index chạy < 100ms.
 
 ## Deliverables
 - [x] ✅ 001_init_users.up/down.sql
