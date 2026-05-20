@@ -131,13 +131,13 @@ func (r *InMemoryOrderRepository) ListByStatus(ctx context.Context, status domai
 }
 
 var (
-	ErrOrderNotFound = &RepositoryError{"order not found"}
+	ErrOrderNotFound = &OrderRepositoryError{"order not found"}
 )
 
-type RepositoryError struct {
+type OrderRepositoryError struct {
 	Message string
 }
 
-func (e *RepositoryError) Error() string {
+func (e *OrderRepositoryError) Error() string {
 	return e.Message
 }

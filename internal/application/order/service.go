@@ -3,23 +3,24 @@ package order
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
 	"github.com/3122380051/golang-microservices/internal/domain"
-	"github.com/3122380051/golang-microservices/internal/infrastructure"
 	"github.com/3122380051/golang-microservices/internal/infrastructure/broker"
 )
 
 // Service coordinates order creation, state management, and event publishing
 type Service struct {
-	logger                  infrastructure.Logger
+	logger                  *slog.Logger
 	repository              domain.OrderRepository
 	stateMachine            *StateMachine
 	validator               *Validator
-	producer                broker.Producer
-	consumer                broker.Consumer
+	producer                *broker.KafkaProducer
+	consumer                *broker.KafkaConsumer
 	processedRiskDecisionMu sync.RWMutex
 	processedRiskDecisions  map[string]bool // riskDecisionID -> processed (idempotency)
 	orderCacheMu            sync.RWMutex
@@ -28,10 +29,10 @@ type Service struct {
 
 // NewService creates a new order service
 func NewService(
-	logger infrastructure.Logger,
+	logger *slog.Logger,
 	repository domain.OrderRepository,
-	producer broker.Producer,
-	consumer broker.Consumer,
+	producer *broker.KafkaProducer,
+	consumer *broker.KafkaConsumer,
 ) *Service {
 	return &Service{
 		logger:                 logger,
@@ -45,43 +46,31 @@ func NewService(
 	}
 }
 
+// RiskDecisionEvent represents a risk decision event from Kafka
+type RiskDecisionEvent struct {
+	EventID         string    `json:"event_id"`
+	SignalID        string    `json:"signal_id"`
+	UserID          string    `json:"user_id"`
+	StrategyID      string    `json:"strategy_id"`
+	Symbol          string    `json:"symbol"`
+	Side            string    `json:"side"`
+	Quantity        float64   `json:"quantity"`
+	IsApproved      bool      `json:"is_approved"`
+	RejectionReason string    `json:"rejection_reason"`
+	TraceID         string    `json:"trace_id"`
+	Timestamp       time.Time `json:"timestamp"`
+}
+
 // ConsumeRiskDecisions starts consuming risk.order.approved/rejected events
 func (s *Service) ConsumeRiskDecisions(ctx context.Context) {
 	s.logger.Info("starting to consume risk decisions")
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.logger.Info("stopping risk decision consumer")
-			return
-		default:
-		}
-
-		// Try to consume from risk.order.approved
-		msg, err := s.consumer.ReadMessage(ctx, time.Second*10)
-		if err != nil {
-			s.logger.Debug("consumer read error or timeout", "error", err)
-			continue
-		}
-
+	handler := func(ctx context.Context, msg kafka.Message) error {
 		// Parse the risk decision event
-		var event struct {
-			EventID         string `json:"event_id"`
-			SignalID        string `json:"signal_id"`
-			UserID          string `json:"user_id"`
-			StrategyID      string `json:"strategy_id"`
-			Symbol          string `json:"symbol"`
-			Side            string `json:"side"`
-			Quantity        float64 `json:"quantity"`
-			IsApproved      bool `json:"is_approved"`
-			RejectionReason string `json:"rejection_reason"`
-			TraceID         string `json:"trace_id"`
-			Timestamp       time.Time `json:"timestamp"`
-		}
-
+		var event RiskDecisionEvent
 		if err := json.Unmarshal(msg.Value, &event); err != nil {
 			s.logger.Error("failed to parse risk decision event", "error", err)
-			continue
+			return err
 		}
 
 		// Handle the decision
@@ -90,24 +79,17 @@ func (s *Service) ConsumeRiskDecisions(ctx context.Context) {
 		} else {
 			s.handleRejectedSignal(ctx, &event)
 		}
+		return nil
+	}
+
+	if err := s.consumer.Consume(ctx, handler); err != nil {
+		s.logger.Error("consumer error", "error", err)
 	}
 }
 
 // handleApprovedSignal creates an order from an approved risk decision
-func (s *Service) handleApprovedSignal(ctx context.Context, event *interface{}) {
-	e := *event.(*struct {
-		EventID         string
-		SignalID        string
-		UserID          string
-		StrategyID      string
-		Symbol          string
-		Side            string
-		Quantity        float64
-		IsApproved      bool
-		RejectionReason string
-		TraceID         string
-		Timestamp       time.Time
-	})
+func (s *Service) handleApprovedSignal(ctx context.Context, event *RiskDecisionEvent) {
+	e := event
 
 	traceID := e.TraceID
 	riskDecisionID := e.EventID
@@ -162,25 +144,11 @@ func (s *Service) handleApprovedSignal(ctx context.Context, event *interface{}) 
 }
 
 // handleRejectedSignal logs rejected signals (no order created)
-func (s *Service) handleRejectedSignal(ctx context.Context, event *interface{}) {
-	e := *event.(*struct {
-		EventID         string
-		SignalID        string
-		UserID          string
-		StrategyID      string
-		Symbol          string
-		Side            string
-		Quantity        float64
-		IsApproved      bool
-		RejectionReason string
-		TraceID         string
-		Timestamp       time.Time
-	})
-
+func (s *Service) handleRejectedSignal(ctx context.Context, event *RiskDecisionEvent) {
 	s.logger.Info("risk decision rejected, not creating order",
-		"risk_decision_id", e.EventID,
-		"reason", e.RejectionReason,
-		"trace_id", e.TraceID,
+		"risk_decision_id", event.EventID,
+		"reason", event.RejectionReason,
+		"trace_id", event.TraceID,
 	)
 }
 
@@ -369,7 +337,7 @@ func (s *Service) publishOrderEvent(ctx context.Context, order *domain.Order, ev
 		return err
 	}
 
-	return s.producer.PublishMessage(ctx, eventType, order.ID, payload)
+	return s.producer.Publish(ctx, eventType, []byte(order.ID), payload)
 }
 
 var (

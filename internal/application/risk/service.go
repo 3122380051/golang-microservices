@@ -3,37 +3,38 @@ package risk
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/3122380051/golang-microservices/internal/domain"
-	"github.com/3122380051/golang-microservices/internal/infrastructure"
 	"github.com/3122380051/golang-microservices/internal/infrastructure/broker"
+	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
 )
 
 // Service coordinates risk evaluation and decision publishing
 type Service struct {
-	logger              infrastructure.Logger
-	evaluator           *Evaluator
-	policyRepository    domain.RiskPolicyRepository
-	portfolioCache      domain.PortfolioCacheProvider
-	producer            broker.Producer
-	consumer            broker.Consumer
-	processedSignalsMu  sync.RWMutex
-	processedSignals    map[string]bool // signalID -> processed (idempotency)
-	decisionsCacheMu    sync.RWMutex
-	decisionsCache      map[string]*domain.RiskDecision // id -> decision
+	logger             *slog.Logger
+	evaluator          *Evaluator
+	policyRepository   domain.RiskPolicyRepository
+	portfolioCache     domain.PortfolioCacheProvider
+	producer           *broker.KafkaProducer
+	consumer           *broker.KafkaConsumer
+	processedSignalsMu sync.RWMutex
+	processedSignals   map[string]bool // signalID -> processed (idempotency)
+	decisionsCacheMu   sync.RWMutex
+	decisionsCache     map[string]*domain.RiskDecision // id -> decision
 }
 
 // NewService creates a new risk service
 func NewService(
-	logger infrastructure.Logger,
+	logger *slog.Logger,
 	evaluator *Evaluator,
 	policyRepository domain.RiskPolicyRepository,
 	portfolioCache domain.PortfolioCacheProvider,
-	producer broker.Producer,
-	consumer broker.Consumer,
+	producer *broker.KafkaProducer,
+	consumer *broker.KafkaConsumer,
 ) *Service {
 	return &Service{
 		logger:           logger,
@@ -51,34 +52,26 @@ func NewService(
 func (s *Service) ConsumeStrategySignals(ctx context.Context) {
 	s.logger.Info("starting to consume strategy signals")
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.logger.Info("stopping signal consumer")
-			return
-		default:
-		}
-
-		msg, err := s.consumer.ReadMessage(ctx, time.Second*10)
-		if err != nil {
-			s.logger.Debug("consumer read error or timeout", "error", err)
-			continue
-		}
-
+	handler := func(ctx context.Context, msg kafka.Message) error {
 		// Parse the strategy signal
-		var signal domain.StrategySignal
+		var signal domain.Signal
 		if err := json.Unmarshal(msg.Value, &signal); err != nil {
 			s.logger.Error("failed to parse strategy signal", "error", err, "topic", msg.Topic)
-			continue
+			return err
 		}
 
 		// Process signal
 		s.processStrategySignal(ctx, &signal)
+		return nil
+	}
+
+	if err := s.consumer.Consume(ctx, handler); err != nil {
+		s.logger.Error("consumer error", "error", err)
 	}
 }
 
 // processStrategySignal evaluates a signal and publishes risk decision
-func (s *Service) processStrategySignal(ctx context.Context, signal *domain.StrategySignal) {
+func (s *Service) processStrategySignal(ctx context.Context, signal *domain.Signal) {
 	// Idempotency: skip if already processed
 	s.processedSignalsMu.Lock()
 	if s.processedSignals[signal.ID] {
@@ -143,13 +136,8 @@ func (s *Service) processStrategySignal(ctx context.Context, signal *domain.Stra
 // publishDecision publishes a risk decision to Kafka
 func (s *Service) publishDecision(ctx context.Context, decision *domain.RiskDecision) error {
 	event := decision.ToEvent()
-	payload, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-
 	topic := decision.EventType() // "risk.order.approved" or "risk.order.rejected"
-	return s.producer.PublishMessage(ctx, topic, event.EventID, payload)
+	return s.producer.PublishJSON(ctx, topic, event.EventID, event)
 }
 
 // logRiskChecks logs detailed results of all risk checks
@@ -191,6 +179,21 @@ func (s *Service) GetDecisionsBySignal(signalID string) (*domain.RiskDecision, e
 	return nil, ErrDecisionNotFound
 }
 
+// ListDecisions lists cached decisions for a user.
+func (s *Service) ListDecisions(ctx context.Context, userID string) ([]*domain.RiskDecision, error) {
+	s.decisionsCacheMu.RLock()
+	defer s.decisionsCacheMu.RUnlock()
+
+	decisions := make([]*domain.RiskDecision, 0)
+	for _, decision := range s.decisionsCache {
+		if userID == "" || decision.UserID == userID {
+			decisions = append(decisions, decision)
+		}
+	}
+
+	return decisions, nil
+}
+
 // CreatePolicy creates a new risk policy
 func (s *Service) CreatePolicy(ctx context.Context, policy *domain.RiskPolicy) error {
 	return s.policyRepository.Create(ctx, policy)
@@ -209,6 +212,22 @@ func (s *Service) UpdatePolicy(ctx context.Context, policy *domain.RiskPolicy) e
 // DeletePolicy deletes a risk policy
 func (s *Service) DeletePolicy(ctx context.Context, id string) error {
 	return s.policyRepository.Delete(ctx, id)
+}
+
+// ListPolicies lists all policies for a user.
+func (s *Service) ListPolicies(ctx context.Context, userID string) ([]*domain.RiskPolicy, error) {
+	policies, err := s.policyRepository.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*domain.RiskPolicy, 0, len(policies))
+	for i := range policies {
+		policy := policies[i]
+		result = append(result, &policy)
+	}
+
+	return result, nil
 }
 
 // ListUserPolicies lists all policies for a user

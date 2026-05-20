@@ -12,6 +12,7 @@ const (
 	TopicRiskOrderApproved       = "risk.order.approved"
 	TopicOrderCreated            = "order.created"
 	TopicExecutionSubmitted      = "execution.submitted"
+	TopicExecutionFilled         = "execution.filled"
 	TopicPortfolioUpdated        = "portfolio.updated"
 	TopicNotificationRequested   = "notification.send.requested"
 )
@@ -31,17 +32,17 @@ type Envelope struct {
 
 // MarketPriceUpdated is the v1 schema for market price events.
 type MarketPriceUpdated struct {
-	EventID string    `json:"event_id"`
-	TraceID string    `json:"trace_id"`
-	Version int       `json:"version"`
-	Source  string    `json:"source"`
-	Symbol  string    `json:"symbol"`
-	Exchange string   `json:"exchange"`
-	Price   float64   `json:"price"`
-	Bid     float64   `json:"bid"`
-	Ask     float64   `json:"ask"`
-	Key     string    `json:"key"`
-	Ts      time.Time `json:"ts"`
+	EventID  string    `json:"event_id"`
+	TraceID  string    `json:"trace_id"`
+	Version  int       `json:"version"`
+	Source   string    `json:"source"`
+	Symbol   string    `json:"symbol"`
+	Exchange string    `json:"exchange"`
+	Price    float64   `json:"price"`
+	Bid      float64   `json:"bid"`
+	Ask      float64   `json:"ask"`
+	Key      string    `json:"key"`
+	Ts       time.Time `json:"ts"`
 }
 
 // PartitionKey returns the broker partition key for this event.

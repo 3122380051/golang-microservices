@@ -2,23 +2,21 @@ package transport
 
 import (
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/3122380051/golang-microservices/internal/application/order"
 	"github.com/3122380051/golang-microservices/internal/domain"
-	"github.com/3122380051/golang-microservices/internal/infrastructure"
 )
 
 // OrderHandler handles HTTP requests for order service endpoints
 type OrderHandler struct {
 	orderService *order.Service
-	logger       infrastructure.Logger
+	logger       *slog.Logger
 }
 
 // NewOrderHandler creates a new order handler
-func NewOrderHandler(orderService *order.Service, logger infrastructure.Logger) *OrderHandler {
+func NewOrderHandler(orderService *order.Service, logger *slog.Logger) *OrderHandler {
 	return &OrderHandler{
 		orderService: orderService,
 		logger:       logger,
@@ -83,14 +81,14 @@ func (h *OrderHandler) createOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.respondJSON(w, http.StatusCreated, map[string]interface{}{
-		"id":               ord.ID,
-		"client_order_id":  ord.ClientOrderID,
-		"correlation_id":   ord.CorrelationID,
-		"status":           ord.Status,
-		"symbol":           ord.Symbol,
-		"side":             ord.Side,
-		"quantity":         ord.Quantity,
-		"created_at":       ord.CreatedAt,
+		"id":              ord.ID,
+		"client_order_id": ord.ClientOrderID,
+		"correlation_id":  ord.CorrelationID,
+		"status":          ord.Status,
+		"symbol":          ord.Symbol,
+		"side":            ord.Side,
+		"quantity":        ord.Quantity,
+		"created_at":      ord.CreatedAt,
 	})
 }
 

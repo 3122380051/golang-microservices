@@ -97,15 +97,15 @@ Các task được tổ chức thành 8 giai đoạn, mỗi giai đoạn có th�
 | [006 - User](006-user-service/) | ✅ COMPLETED | Copilot | 5h | Day 4 | 8082 |
 | [007 - Market Data](007-market-data-service/) | ✅ COMPLETED | Copilot | 8h | Day 5-6 | 8083 |
 | [008 - Strategy](008-strategy-service/) | ✅ COMPLETED | Copilot | 6h | Day 6-7 | 8084 |
-| [009 - Risk](009-risk-service/) | ⏳ PLANNED | Backend 6 | 6h | Day 8-9 | 8085 |
-| [010 - Order](010-order-service/) | ⏳ PLANNED | Backend 7 | 7h | Day 9-10 | 8086 |
-| [011 - Execution](011-execution-service/) | ⏳ PLANNED | Backend 8 | 8h | Day 11-12 | 8087 |
-| [012 - Portfolio](012-portfolio-service/) | ⏳ PLANNED | Backend 9 | 6h | Day 12-13 | 8088 |
+| [009 - Risk](009-risk-service/) | ✅ COMPLETED | Backend 6 | 6h | Day 8-9 | 8085 |
+| [010 - Order](010-order-service/) | ✅ COMPLETED | Backend 7 | 7h | Day 9-10 | 8086 |
+| [011 - Execution](011-execution-service/) | ✅ COMPLETED | Backend 8 | 8h | Day 11-12 | 8087 |
+| [012 - Portfolio](012-portfolio-service/) | ✅ COMPLETED | Backend 9 | 6h | Day 12-13 | 8088 |
 
 ## 📊 Completion Summary
 
 **Phase 1 (Infrastructure + Market/Strategy): 8/8 ✅ COMPLETE** (42 hours)  
-**Phase 2 (Risk + Order + Execution + Portfolio): 4/4 ⏳ PLANNED** (27 hours)  
+**Phase 2 (Risk + Order + Execution + Portfolio): 4/4 ✅ COMPLETE** (27 hours)  
 **Phase 3+: Additional Services** (TBD)
 
 ### Phase 1 Status: ✅ COMPLETE
@@ -130,13 +130,13 @@ Các task được tổ chức thành 8 giai đoạn, mỗi giai đoạn có th�
 - [x] Docker Compose with all 8 services
 - [x] Multi-stage Dockerfile for each service
 
-### Phase 2 Status: ⏳ PLANNED (Ready to implement)
+### Phase 2 Status: ✅ COMPLETE
 
 #### Trading Core - Order Matching ⏳
-- [ ] Risk Service (port 8085): Risk policy evaluation, approval/rejection
-- [ ] Order Service (port 8086): Order lifecycle, state machine, idempotency
-- [ ] **Execution Service (port 8087)**: **Order submission, retry logic, Binance matching, reconciliation** ⭐ **CRITICAL**
-- [ ] Portfolio Service (port 8088): Position tracking, PnL calculation, margin management
+- [x] Risk Service (port 8085): Risk policy evaluation, approval/rejection
+- [x] Order Service (port 8086): Order lifecycle, state machine, idempotency
+- [x] **Execution Service (port 8087)**: **Order submission, retry logic, Binance matching, reconciliation** ⭐ **CRITICAL**
+- [x] Portfolio Service (port 8088): Position tracking, PnL calculation, margin management
 
 #### Event Flow (Phase 2 complete)
 ```
@@ -144,10 +144,10 @@ Market Data → Strategy Signal → Risk Check → Order Create → Execution �
 ```
 
 ## Next Phase Tasks (Planned)
-- **TASK-009**: Risk Service (6h) ← Start here
-- **TASK-010**: Order Service (7h)
-- **TASK-011**: Execution Service (8h) ⭐ Critical for order matching
-- **TASK-012**: Portfolio Service (6h)
+- **TASK-009**: Risk Service (6h) ✅ Complete
+- **TASK-010**: Order Service (7h) ✅ Complete
+- **TASK-011**: Execution Service (8h) ⭐ Critical for order matching, complete
+- **TASK-012**: Portfolio Service (6h) ✅ Complete
 
 ## Quick Links
 - [Architecture Overview](../architecture-tong-the.md)

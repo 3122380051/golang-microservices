@@ -2,23 +2,22 @@ package transport
 
 import (
 	"encoding/json"
-	"fmt"
+	"log/slog"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/3122380051/golang-microservices/internal/application/risk"
 	"github.com/3122380051/golang-microservices/internal/domain"
-	"github.com/3122380051/golang-microservices/internal/infrastructure"
+	"github.com/google/uuid"
 )
 
 // RiskHandler handles HTTP requests for risk service endpoints
 type RiskHandler struct {
 	riskService *risk.Service
-	logger      infrastructure.Logger
+	logger      *slog.Logger
 }
 
 // NewRiskHandler creates a new risk handler
-func NewRiskHandler(riskService *risk.Service, logger infrastructure.Logger) *RiskHandler {
+func NewRiskHandler(riskService *risk.Service, logger *slog.Logger) *RiskHandler {
 	return &RiskHandler{
 		riskService: riskService,
 		logger:      logger,

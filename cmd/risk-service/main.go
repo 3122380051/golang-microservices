@@ -6,57 +6,62 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+	"time"
+
+	"log/slog"
 
 	"github.com/3122380051/golang-microservices/internal/application/risk"
+	"github.com/3122380051/golang-microservices/internal/config"
+	"github.com/3122380051/golang-microservices/internal/database"
 	"github.com/3122380051/golang-microservices/internal/domain"
 	"github.com/3122380051/golang-microservices/internal/infrastructure"
 	"github.com/3122380051/golang-microservices/internal/infrastructure/broker"
-	"github.com/3122380051/golang-microservices/internal/transport"
+	"github.com/3122380051/golang-microservices/internal/logger"
+	httptransport "github.com/3122380051/golang-microservices/internal/transport/http"
 )
 
 func main() {
-	// Initialize config
-	cfg := infrastructure.LoadConfig()
-
-	// Initialize logger
-	logger := infrastructure.NewLogger(cfg)
-	defer func() {
-		if err := logger.Sync(); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to sync logger: %v\n", err)
-		}
-	}()
-
-	logger.Info("starting risk service", "version", "1.0.0")
-
-	// Initialize database
-	db, err := infrastructure.NewDatabase(cfg)
+	cfg, err := config.Load()
 	if err != nil {
-		logger.Fatal("failed to initialize database", "error", err)
+		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
+		os.Exit(1)
+	}
+
+	appLogger := logger.New(cfg.LogLevel)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	appLogger.Info("starting risk service", "version", "1.0.0")
+
+	db, err := database.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		appLogger.Error("failed to initialize database", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
-	// Initialize Kafka producer & consumer
-	producer, err := broker.NewProducer(cfg)
-	if err != nil {
-		logger.Fatal("failed to initialize kafka producer", "error", err)
-	}
-	defer producer.Close()
+	brokers := splitCSV(cfg.KafkaBrokers)
 
-	consumer, err := broker.NewConsumer(cfg, "strategy.signal.generated")
-	if err != nil {
-		logger.Fatal("failed to initialize kafka consumer", "error", err)
+	var producer *broker.KafkaProducer
+	if len(brokers) > 0 {
+		producer = broker.NewKafkaProducer(brokers)
+		defer producer.Close()
 	}
-	defer consumer.Close()
 
-	// Initialize repositories and caches
+	var consumer *broker.KafkaConsumer
+	if len(brokers) > 0 && producer != nil {
+		consumer = broker.NewKafkaConsumer(brokers, "risk-service", "strategy.signal.generated", broker.DefaultDLQTopic, producer)
+		defer consumer.Close()
+	}
+
 	riskPolicyRepo := infrastructure.NewInMemoryRiskPolicyRepository()
 	portfolioCache := infrastructure.NewPortfolioCache()
 
-	// Initialize risk service
-	evaluator := risk.NewEvaluator(logger)
+	evaluator := risk.NewEvaluator(appLogger)
 	riskService := risk.NewService(
-		logger,
+		appLogger,
 		evaluator,
 		riskPolicyRepo,
 		portfolioCache,
@@ -64,68 +69,62 @@ func main() {
 		consumer,
 	)
 
-	// Initialize default policies
-	initializeDefaultPolicies(riskPolicyRepo, logger)
+	initializeDefaultPolicies(riskPolicyRepo, appLogger)
 
-	// Start Kafka consumer loop in background
-	go riskService.ConsumeStrategySignals(context.Background())
+	if consumer != nil {
+		go riskService.ConsumeStrategySignals(ctx)
+	}
 
-	// Initialize HTTP transport
-	httpServer := transport.NewHTTPServer(cfg, logger)
+	mux := http.NewServeMux()
+	riskHandler := httptransport.NewRiskHandler(riskService, appLogger)
+	riskHandler.RegisterRoutes(mux)
 
-	// Register risk endpoints
-	riskHandler := transport.NewRiskHandler(riskService, logger)
-	riskHandler.RegisterRoutes(httpServer)
-
-	// Health check endpoints
-	httpServer.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"status":"healthy","service":"risk-service"}`)
 	})
 
-	httpServer.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"status":"ready","service":"risk-service"}`)
 	})
 
-	// Start HTTP server
+	server := &http.Server{
+		Addr:    ":8085",
+		Handler: mux,
+	}
+
 	go func() {
-		addr := fmt.Sprintf(":%d", cfg.RiskServicePort)
-		logger.Info("http server starting", "addr", addr)
-		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal("http server error", "error", err)
+		appLogger.Info("http server starting", "addr", ":8085")
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			appLogger.Error("http server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
-	// Graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	<-sigChan
-
-	logger.Info("shutting down risk service")
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	<-ctx.Done()
+	appLogger.Info("shutting down risk service")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-
-	if err := httpServer.Shutdown(ctx); err != nil {
-		logger.Error("http server shutdown error", "error", err)
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		appLogger.Error("http server shutdown error", "error", err)
 	}
-
-	logger.Info("risk service stopped")
+	appLogger.Info("risk service stopped")
 }
 
-func initializeDefaultPolicies(repo domain.RiskPolicyRepository, logger infrastructure.Logger) {
+func initializeDefaultPolicies(repo domain.RiskPolicyRepository, logger *slog.Logger) {
 	defaultPolicy := &domain.RiskPolicy{
-		ID:               "default-policy",
-		UserID:           "default",
-		StrategyID:       "*",
-		MaxPositionSize:  100000.0,  // USD
-		MaxLeverage:      5.0,
-		MaxDailyLoss:     -1000.0,   // USD
-		MinMarginRatio:   0.5,        // 50%
-		MaxExposure:      500000.0,   // USD
-		IsActive:         true,
+		ID:              "default-policy",
+		UserID:          "default",
+		StrategyID:      "*",
+		MaxPositionSize: 100000.0,
+		MaxLeverage:     5.0,
+		MaxDailyLoss:    -1000.0,
+		MinMarginRatio:  0.5,
+		MaxExposure:     500000.0,
+		IsActive:        true,
 	}
 	if err := repo.Create(context.Background(), defaultPolicy); err != nil {
 		logger.Error("failed to create default policy", "error", err)
@@ -133,3 +132,18 @@ func initializeDefaultPolicies(repo domain.RiskPolicyRepository, logger infrastr
 }
 
 const shutdownTimeout = 30 // seconds
+
+func splitCSV(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, item := range parts {
+		trimmed := strings.TrimSpace(item)
+		if trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	return out
+}

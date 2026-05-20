@@ -85,6 +85,30 @@ func (b *BinanceClient) GetTicker(ctx context.Context, symbol string) (domain.Ma
 	}, nil
 }
 
+// GetPrice retrieves current price for a symbol (simplified version of GetTicker)
+func (b *BinanceClient) GetPrice(ctx context.Context, symbol string) (float64, error) {
+	price, err := b.GetTicker(ctx, symbol)
+	if err != nil {
+		return 0, err
+	}
+	return price.Price, nil
+}
+
+// GetPrices retrieves current prices for multiple symbols
+func (b *BinanceClient) GetPrices(ctx context.Context, symbols []string) (map[string]float64, error) {
+	result := make(map[string]float64)
+	for _, sym := range symbols {
+		price, err := b.GetPrice(ctx, sym)
+		if err != nil {
+			// Continue with other symbols if one fails
+			result[sym] = 0
+		} else {
+			result[sym] = price
+		}
+	}
+	return result, nil
+}
+
 func (b *BinanceClient) GetCandles(ctx context.Context, symbol, interval string, limit int) ([]domain.Candle, error) {
 	if limit <= 0 {
 		limit = 100
@@ -228,4 +252,57 @@ func toInt64(v any) (int64, bool) {
 	default:
 		return 0, false
 	}
+}
+
+// SubmitOrder submits a new order to Binance
+func (b *BinanceClient) SubmitOrder(ctx context.Context, req *OrderRequest) (string, error) {
+	// This is a placeholder - Binance trading API requires authentication
+	// Full implementation requires API key/secret for signed requests
+	_ = b.baseURL + "/api/v3/order"
+
+	query := url.Values{}
+	query.Add("symbol", strings.ToUpper(strings.TrimSpace(req.Symbol)))
+	query.Add("side", strings.ToUpper(req.Side))
+	query.Add("type", strings.ToUpper(req.Type))
+	query.Add("quantity", fmt.Sprintf("%f", req.Quantity))
+	query.Add("newClientOrderId", req.ClientOrderID)
+	query.Add("timeInForce", req.TimeInForce)
+
+	if req.Price > 0 && req.Type == "LIMIT" {
+		query.Add("price", fmt.Sprintf("%f", req.Price))
+	}
+
+	// Mock implementation returns a fake order ID
+	// In production, this would make an authenticated request to Binance
+	return fmt.Sprintf("binance-order-%s-%d", req.ClientOrderID, time.Now().UnixNano()), nil
+}
+
+// GetOrderStatus retrieves order status from Binance
+func (b *BinanceClient) GetOrderStatus(ctx context.Context, symbol, orderID string) (*OrderStatus, error) {
+	// This is a placeholder - Binance trading API requires authentication
+	_ = b.baseURL + "/api/v3/order"
+
+	query := url.Values{}
+	query.Add("symbol", strings.ToUpper(strings.TrimSpace(symbol)))
+	query.Add("origClientOrderId", orderID)
+
+	// Mock implementation returns a completed order with fills
+	// In production, this would make an authenticated request to Binance
+	return &OrderStatus{
+		OrderID:     orderID,
+		Symbol:      strings.ToUpper(symbol),
+		Status:      "FILLED",
+		Quantity:    1.0,
+		ExecutedQty: 1.0,
+		Fills: []Fill{
+			{
+				TradeID:  "trade-" + orderID,
+				Quantity: 1.0,
+				Price:    50000.0,
+				Fee:      10.0,
+				FeeAsset: "USDT",
+				Time:     time.Now().UnixMilli(),
+			},
+		},
+	}, nil
 }

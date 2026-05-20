@@ -56,14 +56,14 @@ tests/
 ```
 
 ## Deliverables
-- [ ] ✅ cmd/risk-service/main.go
-- [ ] ✅ internal/domain/risk_policy.go, risk_decision.go
-- [ ] ✅ internal/application/risk/service.go (Kafka consumer, event publisher)
-- [ ] ✅ internal/application/risk/evaluator.go (risk check logic)
-- [ ] ✅ internal/application/risk/policies.go (predefined policies)
-- [ ] ✅ internal/infrastructure/repository/risk_policy_repository.go (in-memory storage for MVP)
-- [ ] ✅ internal/transport/http/risk_handler.go (CRUD endpoints)
-- [ ] ✅ tests/risk_service_test.go, risk_evaluator_test.go
+- [x] ✅ cmd/risk-service/main.go
+- [x] ✅ internal/domain/risk_policy.go, risk_decision.go
+- [x] ✅ internal/application/risk/service.go (Kafka consumer, event publisher)
+- [x] ✅ internal/application/risk/evaluator.go (risk check logic)
+- [x] ✅ internal/application/risk/policies.go (predefined policies)
+- [x] ✅ internal/infrastructure/repository/risk_policy_repository.go (in-memory storage for MVP)
+- [x] ✅ internal/transport/http/risk_handler.go (CRUD endpoints)
+- [x] ✅ tests/risk_service_test.go, risk_evaluator_test.go
 
 ## Implementation Notes
 - Risk evaluator dùng decision tree: check position size → leverage → margin → daily loss.
@@ -80,4 +80,4 @@ tests/
 Tuần 5 (Ngày 8-9)
 
 ## Status
-⏳ TODO - Ready to implement
+✅ COMPLETED - Build and tests verified

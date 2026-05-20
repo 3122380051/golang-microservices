@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/3122380051/golang-microservices/internal/application/order"
 	"github.com/3122380051/golang-microservices/internal/domain"
 	"github.com/3122380051/golang-microservices/internal/infrastructure"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Test StateMachine transitions
@@ -246,19 +246,22 @@ func TestOrderRepository_ListByUser(t *testing.T) {
 	ctx := context.Background()
 
 	ord1 := &domain.Order{
-		ID:     "order-1",
-		UserID: "user1",
-		Status: domain.OrderStatusCreated,
+		ID:            "order-1",
+		ClientOrderID: "client-order-1",
+		UserID:        "user1",
+		Status:        domain.OrderStatusCreated,
 	}
 	ord2 := &domain.Order{
-		ID:     "order-2",
-		UserID: "user1",
-		Status: domain.OrderStatusSubmitted,
+		ID:            "order-2",
+		ClientOrderID: "client-order-2",
+		UserID:        "user1",
+		Status:        domain.OrderStatusSubmitted,
 	}
 	ord3 := &domain.Order{
-		ID:     "order-3",
-		UserID: "user2",
-		Status: domain.OrderStatusCreated,
+		ID:            "order-3",
+		ClientOrderID: "client-order-3",
+		UserID:        "user2",
+		Status:        domain.OrderStatusCreated,
 	}
 
 	repo.Create(ctx, ord1)

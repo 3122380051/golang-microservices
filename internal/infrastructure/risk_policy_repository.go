@@ -147,10 +147,3 @@ var (
 	ErrDefaultPolicyNotFound    = &RepositoryError{"default policy not found"}
 )
 
-type RepositoryError struct {
-	Message string
-}
-
-func (e *RepositoryError) Error() string {
-	return e.Message
-}

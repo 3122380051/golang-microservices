@@ -61,15 +61,15 @@ tests/
 ```
 
 ## Deliverables
-- [ ] ✅ cmd/portfolio-service/main.go
-- [ ] ✅ internal/domain/portfolio.go, position.go, pnl.go
-- [ ] ✅ internal/application/portfolio/service.go (main service + event consumers)
-- [ ] ✅ internal/application/portfolio/position_manager.go (update positions)
-- [ ] ✅ internal/application/portfolio/pnl_calculator.go (PnL logic)
-- [ ] ✅ internal/application/portfolio/projector.go (eventually consistent updates)
-- [ ] ✅ internal/infrastructure/repository/portfolio_repository.go, position_repository.go
-- [ ] ✅ internal/transport/http/portfolio_handler.go (query endpoints)
-- [ ] ✅ tests/portfolio_service_test.go, position_manager_test.go, pnl_calculator_test.go
+- [x] ✅ cmd/portfolio-service/main.go
+- [x] ✅ internal/domain/portfolio.go, position.go, pnl.go
+- [x] ✅ internal/application/portfolio/service.go (main service + event consumers)
+- [x] ✅ internal/application/portfolio/position_manager.go (update positions)
+- [x] ✅ internal/application/portfolio/pnl_calculator.go (PnL logic)
+- [x] ✅ internal/application/portfolio/projector.go (eventually consistent updates)
+- [x] ✅ internal/infrastructure/repository/portfolio_repository.go, position_repository.go
+- [x] ✅ internal/transport/http/portfolio_handler.go (query endpoints)
+- [x] ✅ tests/portfolio_service_test.go, position_manager_test.go, pnl_calculator_test.go
 
 ## Implementation Notes
 
@@ -175,4 +175,4 @@ Example:
 Tuần 6-7 (Ngày 12-13)
 
 ## Status
-⏳ TODO - Ready to implement
+✅ COMPLETED - Build and tests verified

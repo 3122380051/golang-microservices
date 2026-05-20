@@ -10,12 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/3122380051/golang-microservices/internal/application/order"
+	"github.com/3122380051/golang-microservices/internal/application/execution"
 	"github.com/3122380051/golang-microservices/internal/config"
 	"github.com/3122380051/golang-microservices/internal/database"
 	"github.com/3122380051/golang-microservices/internal/domain/event"
 	"github.com/3122380051/golang-microservices/internal/infrastructure"
 	"github.com/3122380051/golang-microservices/internal/infrastructure/broker"
+	"github.com/3122380051/golang-microservices/internal/infrastructure/exchange"
 	"github.com/3122380051/golang-microservices/internal/logger"
 	httptransport "github.com/3122380051/golang-microservices/internal/transport/http"
 )
@@ -31,7 +32,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	appLogger.Info("starting order service", "version", "1.0.0")
+	appLogger.Info("starting execution service", "version", "1.0.0")
 
 	db, err := database.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -50,39 +51,50 @@ func main() {
 
 	var consumer *broker.KafkaConsumer
 	if len(brokers) > 0 && producer != nil {
-		consumer = broker.NewKafkaConsumer(brokers, "order-service", event.TopicRiskOrderApproved, broker.DefaultDLQTopic, producer)
+		consumer = broker.NewKafkaConsumer(brokers, "execution-service", event.TopicOrderCreated, broker.DefaultDLQTopic, producer)
 		defer consumer.Close()
 	}
 
-	orderRepository := infrastructure.NewInMemoryOrderRepository()
-	orderService := order.NewService(appLogger, orderRepository, producer, consumer)
+	// Initialize Binance exchange adapter
+	exchangeAdapter := exchange.NewBinanceClient()
+
+	// Initialize repository
+	executionRepository := infrastructure.NewInMemoryExecutionRepository()
+
+	// Initialize execution service
+	executionService := execution.NewService(appLogger, executionRepository, producer, consumer, exchangeAdapter)
+
+	// Start Kafka consumer loop for order.created events
 	if consumer != nil {
-		go orderService.ConsumeRiskDecisions(ctx)
+		go executionService.ConsumeOrderCreated(ctx)
 	}
 
+	// Start reconciliation loop (polling for fills)
+	go executionService.StartReconciliationLoop(ctx)
+
 	mux := http.NewServeMux()
-	orderHandler := httptransport.NewOrderHandler(orderService, appLogger)
-	orderHandler.RegisterRoutes(mux)
+	executionHandler := httptransport.NewExecutionHandler(executionService, appLogger)
+	executionHandler.RegisterRoutes(mux)
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"healthy","service":"order-service"}`)
+		fmt.Fprintf(w, `{"status":"healthy","service":"execution-service"}`)
 	})
 
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"ready","service":"order-service"}`)
+		fmt.Fprintf(w, `{"status":"ready","service":"execution-service"}`)
 	})
 
 	server := &http.Server{
-		Addr:    ":8086",
+		Addr:    ":8087",
 		Handler: mux,
 	}
 
 	go func() {
-		appLogger.Info("http server starting", "addr", ":8086")
+		appLogger.Info("http server starting", "addr", ":8087")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			appLogger.Error("http server error", "error", err)
 			os.Exit(1)
@@ -90,13 +102,13 @@ func main() {
 	}()
 
 	<-ctx.Done()
-	appLogger.Info("shutting down order service")
+	appLogger.Info("shutting down execution service")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		appLogger.Error("http server shutdown error", "error", err)
 	}
-	appLogger.Info("order service stopped")
+	appLogger.Info("execution service stopped")
 }
 
 func splitCSV(raw string) []string {

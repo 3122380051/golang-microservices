@@ -2,18 +2,18 @@ package risk
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/3122380051/golang-microservices/internal/domain"
-	"github.com/3122380051/golang-microservices/internal/infrastructure"
 )
 
 // Evaluator performs risk assessment and decision making
 type Evaluator struct {
-	logger infrastructure.Logger
+	logger *slog.Logger
 }
 
 // NewEvaluator creates a new risk evaluator
-func NewEvaluator(logger infrastructure.Logger) *Evaluator {
+func NewEvaluator(logger *slog.Logger) *Evaluator {
 	return &Evaluator{
 		logger: logger,
 	}
@@ -24,7 +24,7 @@ func NewEvaluator(logger infrastructure.Logger) *Evaluator {
 func (e *Evaluator) EvaluateSignal(
 	policy *domain.RiskPolicy,
 	portfolio *domain.PortfolioSnapshot,
-	signal *domain.StrategySignal,
+	signal *domain.Signal,
 	estimatedPrice float64,
 ) *domain.RiskDecision {
 
@@ -87,7 +87,7 @@ func (e *Evaluator) EvaluateSignal(
 // checkPositionSize validates order quantity doesn't exceed max_position_size
 func (e *Evaluator) checkPositionSize(
 	policy *domain.RiskPolicy,
-	signal *domain.StrategySignal,
+	signal *domain.Signal,
 	price float64,
 	decision *domain.RiskDecision,
 ) bool {
@@ -114,7 +114,7 @@ func (e *Evaluator) checkPositionSize(
 func (e *Evaluator) checkLeverage(
 	policy *domain.RiskPolicy,
 	portfolio *domain.PortfolioSnapshot,
-	signal *domain.StrategySignal,
+	signal *domain.Signal,
 	price float64,
 	decision *domain.RiskDecision,
 ) bool {
@@ -202,7 +202,7 @@ func (e *Evaluator) checkDailyLoss(
 func (e *Evaluator) checkExposure(
 	policy *domain.RiskPolicy,
 	portfolio *domain.PortfolioSnapshot,
-	signal *domain.StrategySignal,
+	signal *domain.Signal,
 	price float64,
 	decision *domain.RiskDecision,
 ) bool {
