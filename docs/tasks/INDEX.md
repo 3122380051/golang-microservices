@@ -67,6 +67,7 @@ Các task được tổ chức thành 8 giai đoạn, mỗi giai đoạn có th�
   - Effort: 6h | Timeline: Ngày 12-13
 
 ### Giai đoạn 6+: Tiếp tục
+- [ ] [TASK-020: Futures Trading Service](020-futures-trading-service/)
 - Notification Service, Audit Log Service, Exchange Adapters (Bybit, OKX)
 - Testing, Integration, Deployment, Monitoring
 

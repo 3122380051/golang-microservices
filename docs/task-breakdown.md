@@ -14,6 +14,7 @@ Mỗi task có thư mục riêng với SRS, PRD, acceptance criteria:
 - [TASK-006: User Service](tasks/006-user-service/README.md)
 - [TASK-007: Market Data Service](tasks/007-market-data-service/README.md)
 - [TASK-008: Strategy Service](tasks/008-strategy-service/README.md)
+- [TASK-020: Futures Trading Service](tasks/020-futures-trading-service/README.md)
 
 ## Phân chia theo Giai đoạn
 
@@ -176,35 +177,35 @@ Mỗi task có thư mục riêng với SRS, PRD, acceptance criteria:
   - Effort: 5h
   - Owner: Backend 3
 
-- [ ] **TASK-013**: User endpoints.
-  - [ ] GET /users/me, POST /users/me (update).
-  - [ ] POST /users/api-keys, GET /users/api-keys, DELETE /users/api-keys/{id}.
-  - [ ] Encrypt/decrypt API keys.
+- [x] **TASK-013**: User endpoints.
+  - [x] GET /users/me, POST /users/me (update).
+  - [x] POST /users/api-keys, GET /users/api-keys, DELETE /users/api-keys/{id}.
+  - [x] Encrypt/decrypt API keys.
   - Effort: 4h
   - Owner: Backend 3
 
-- [ ] **TASK-014**: API Key encryption.
-  - [ ] AES-256 encryption/decryption.
-  - [ ] Key rotation strategy.
+- [x] **TASK-014**: API Key encryption.
+  - [x] AES-256 encryption/decryption.
+  - [x] Key rotation strategy.
   - Effort: 2h
   - Owner: Backend 3
 
 #### 2.3 Tests
-- [ ] **TASK-015**: Unit tests cho Auth & User services.
-  - [ ] Test password hashing.
-  - [ ] Test JWT generation/validation.
-  - [ ] Test API key encryption.
-  - [ ] Test edge cases (invalid email, weak password).
+- [x] **TASK-015**: Unit tests cho Auth & User services.
+  - [x] Test password hashing.
+  - [x] Test JWT generation/validation.
+  - [x] Test API key encryption.
+  - [x] Test edge cases (invalid email, weak password).
   - Effort: 6h
   - Owner: QA/Backend Lead
 
 ### Giai đoạn 3: Dữ liệu thị trường (Tuần 3-4)
 
 #### 3.1 Market Data Service
-- [ ] **TASK-016**: Implement Market Data Service structure.
-  - [ ] Domain: Market symbol, price, candle.
-  - [ ] Repository: symbol management.
-  - [ ] Service: fetch từ exchange, normalize data.
+- [x] **TASK-016**: Implement Market Data Service structure.
+  - [x] Domain: Market symbol, price, candle.
+  - [x] Repository: symbol management.
+  - [x] Service: fetch từ exchange, normalize data.
   - **Deliverables (Folders & Files)**:
     ```
     cmd/market-data-service/
@@ -227,25 +228,25 @@ Mỗi task có thư mục riêng với SRS, PRD, acceptance criteria:
   - Effort: 5h
   - Owner: Backend 4
 
-- [ ] **TASK-017**: Exchange adapter for Binance.
-  - [ ] REST client cho Binance API (ticker, candles, order book).
-  - [ ] WebSocket client cho stream giá.
-  - [ ] Normalize Binance response -> internal model.
-  - [ ] Error handling, retry, circuit breaker.
+- [x] **TASK-017**: Exchange adapter for Binance.
+  - [x] REST client cho Binance API (ticker, candles, order book).
+  - [x] WebSocket client cho stream giá.
+  - [x] Normalize Binance response -> internal model.
+  - [x] Error handling, retry, circuit breaker.
   - Effort: 8h
   - Owner: Backend 4
 
-- [ ] **TASK-018**: Market data caching.
-  - [ ] Cache giá trong Redis (TTL 10s).
-  - [ ] Cache candle trong TimescaleDB.
-  - [ ] Cache invalidation strategy.
+- [x] **TASK-018**: Market data caching.
+  - [x] Cache giá trong Redis (TTL 10s).
+  - [x] Cache candle trong TimescaleDB.
+  - [x] Cache invalidation strategy.
   - Effort: 4h
   - Owner: Backend 4
 
-- [ ] **TASK-019**: Market data events.
-  - [ ] Publish market.price.updated event.
-  - [ ] Publish market.candle.created event.
-  - [ ] Event batching nếu cần optimize.
+- [x] **TASK-019**: Market data events.
+  - [x] Publish market.price.updated event.
+  - [x] Publish market.candle.created event.
+  - [x] Event batching nếu cần optimize.
   - Effort: 3h
   - Owner: Backend 4
 
@@ -734,6 +735,9 @@ Mỗi task có thư mục riêng với SRS, PRD, acceptance criteria:
 - TASK-039: Multi-exchange (tuy nhiên Binance bắt buộc).
 - TASK-051 đến TASK-055: Nếu muốn MVP nhanh, có thể defer một phần.
 
+### Next Expansion
+- TASK-061: Futures Trading Service (long/short, funding, liquidation).
+
 ## Effort Estimate
 - Tổng effort (8 tuần): ~270 giờ.
 - Trung bình ~ 34 giờ/tuần.
@@ -755,3 +759,4 @@ Mỗi task có thư mục riêng với SRS, PRD, acceptance criteria:
 - Giai đoạn 6: Orders execute trên sàn thực, portfolio tracking.
 - Giai đoạn 7: Notifications gửi được, audit log đầy đủ.
 - Giai đoạn 8: Toàn bộ MVP deployable, test coverage > 70%.
+- Giai đoạn 9: Futures trading mode sẵn sàng, long/short và liquidation monitoring hoạt động.
